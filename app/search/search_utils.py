@@ -159,14 +159,17 @@ def parse_python_file(file_full_path: str) -> tuple[list, dict, list] | None:
             classes.append((class_name, start_lineno, end_lineno))
 
             ## class part (2): collect function info inside this class
-            class_funcs = [
-                (n.name, n.lineno, n.end_lineno)
-                for n in ast.walk(node)
-                if isinstance(n, ast.FunctionDef)
-            ]
+            class_funcs=[]
+            for item in node.body:
+                if isinstance(item,ast.FunctionDef):
+                    item.parent = node
+                    class_funcs.append((item.name,item.lineno,item.end_lineno))
             class_to_funcs[class_name] = class_funcs
 
         elif isinstance(node, ast.FunctionDef):
+            if hasattr(node,"parent"):
+                #in a class
+                continue
             function_name = node.name
             start_lineno = node.lineno
             end_lineno = node.end_lineno
